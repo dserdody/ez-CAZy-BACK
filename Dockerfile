@@ -18,9 +18,12 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 # Copy API code
 COPY main.py /app/main.py
 
-# Copy your FASTA database and build a DIAMOND .dmnd database inside the image
-COPY Supplementary_data2.faa /data/Supplementary_data2.faa
-RUN diamond makedb --in /data/Supplementary_data2.faa -d /data/mydb
+COPY Supplementary_data2.faa /data/raw.faa
+
+# Remove any leading comment/header lines until the first FASTA record (>)
+RUN awk 'BEGIN{s=0} /^>/{s=1} s{print}' /data/raw.faa > /data/db.faa \
+ && diamond makedb --in /data/db.faa -d /data/mydb
+
 
 ENV DB_PATH=/data/mydb.dmnd
 ENV DIAMOND_THREADS=1
